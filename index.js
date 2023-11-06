@@ -27,6 +27,7 @@ async function run() {
     const newsletterSubscriberCollection = client
       .db("nexTechyDB")
       .collection("newsletterSubscriber");
+    const blogsCollection = client.db("nexTechyDB").collection("blogs");
 
     //   Post newsletter email in database
     app.post("/api/v1/newsletter-subscriber", async (req, res) => {
@@ -35,6 +36,20 @@ async function run() {
         const result = await newsletterSubscriberCollection.insertOne(
           subscriber
         );
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res
+          .status(500)
+          .send({ success: false, error: "Internal Server Error" });
+      }
+    });
+
+    //   Post new blog in database
+    app.post("/api/v1/blogs/new", async (req, res) => {
+      try {
+        const newBlog = req.body;
+        const result = await blogsCollection.insertOne(newBlog);
         res.send(result);
       } catch (error) {
         console.log(error);
