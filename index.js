@@ -45,6 +45,19 @@ async function run() {
       }
     });
 
+    //   Get blogs from database
+    app.get("/api/v1/blogs", async (req, res) => {
+      try {
+        const result = await blogsCollection.find().toArray();
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res
+          .status(500)
+          .send({ success: false, error: "Internal Server Error" });
+      }
+    });
+
     //   Post new blog in database
     app.post("/api/v1/blogs/new", async (req, res) => {
       try {
