@@ -113,6 +113,32 @@ async function run() {
       }
     });
 
+    //   Patch single blog into database
+    app.patch("/api/v1/blogs/update/:id/edit", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const blog = req.body;
+        const filter = { _id: new ObjectId(id) };
+        const updateBlog = {
+          $set: {
+            title: blog.title,
+            image: blog.image,
+            category: blog.category,
+            short_desc: blog.short_desc,
+            long_desc: blog.long_desc,
+            time: blog.time,
+          },
+        };
+        const result = await blogsCollection.updateOne(filter, updateBlog);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res
+          .status(500)
+          .send({ success: false, error: "Internal Server Error" });
+      }
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
