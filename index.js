@@ -28,6 +28,7 @@ async function run() {
       .db("nexTechyDB")
       .collection("newsletterSubscriber");
     const blogsCollection = client.db("nexTechyDB").collection("blogs");
+    const wishlistCollection = client.db("nexTechyDB").collection("wishlist");
 
     //   Get blogs from database
     app.get("/api/v1/blogs", async (req, res) => {
@@ -74,6 +75,21 @@ async function run() {
         const id = req.params.id;
         const query = { _id: new ObjectId(id) };
         const result = await blogsCollection.findOne(query);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res
+          .status(500)
+          .send({ success: false, error: "Internal Server Error" });
+      }
+    });
+
+    //   Get user wishlist from database
+    app.get("/api/v1/blogs/wishlist/:email", async (req, res) => {
+      try {
+        const email = req.params.email;
+        const query = { email: email };
+        const result = (await wishlistCollection.findOne(query)) || {};
         res.send(result);
       } catch (error) {
         console.log(error);
@@ -130,6 +146,33 @@ async function run() {
           },
         };
         const result = await blogsCollection.updateOne(filter, updateBlog);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res
+          .status(500)
+          .send({ success: false, error: "Internal Server Error" });
+      }
+    });
+
+    //   Put blogs in wishlist in database
+    app.put("/api/v1/blogs/wishlist/:email", async (req, res) => {
+      try {
+        const email = req.params.email;
+        const newWishlist = req.body;
+        const filter = { email: email };
+        const options = { upsert: true };
+        const updateWishlist = {
+          $set: {
+            email: newWishlist.email,
+            wishlist: newWishlist.wishlist,
+          },
+        };
+        const result = await wishlistCollection.updateOne(
+          filter,
+          updateWishlist,
+          options
+        );
         res.send(result);
       } catch (error) {
         console.log(error);
