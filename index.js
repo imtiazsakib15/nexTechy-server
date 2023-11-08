@@ -69,6 +69,29 @@ async function run() {
       }
     });
 
+    //   Get featured blogs from database
+    app.get("/api/v1/featured-blogs", async (req, res) => {
+      try {
+        const options = {
+          sort: { long_desc: 1 },
+          projection: {
+            title: 1,
+            author: 1,
+          },
+        };
+        const result = await blogsCollection
+          .find({}, options)
+          .limit(10)
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res
+          .status(500)
+          .send({ success: false, error: "Internal Server Error" });
+      }
+    });
+
     //   Get single blog from database
     app.get("/api/v1/blogs/:id", async (req, res) => {
       try {
