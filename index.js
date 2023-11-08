@@ -22,7 +22,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
 
     const newsletterSubscriberCollection = client
       .db("nexTechyDB")
@@ -33,7 +33,20 @@ async function run() {
     //   Get blogs from database
     app.get("/api/v1/blogs", async (req, res) => {
       try {
-        const result = await blogsCollection.find().toArray();
+        const searchedCategory = req.query.category;
+        const searchedtitle = req.query.title;
+        console.log(searchedCategory, searchedtitle);
+
+        let query = {};
+        // if (searchedCategory == "" && searchedCategory == "") {
+        //   query = {};
+        // } else if (searchedCategory == "") {
+        //   query = { title: {$in: searchedtitle} };
+        // } else query = { category: searchedCategory };
+
+        if (searchedCategory == "") query = {};
+        else query = { category: searchedCategory };
+        const result = await blogsCollection.find(query).toArray();
         res.send(result);
       } catch (error) {
         console.log(error);
@@ -222,7 +235,7 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
