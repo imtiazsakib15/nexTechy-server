@@ -1,13 +1,25 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 const app = express();
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5000;
 
 // middlewares
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://nextechy-97707.web.app",
+      "https://nextechy.vercel.app",
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.w4f5dls.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -21,6 +33,23 @@ const client = new MongoClient(uri, {
 });
 
 async function run() {
+  // middleware
+  const verifyToken = (req, res, next) => {
+    try {
+      const token = req?.cookies?.token;
+      if (!token) return res.status(401).send({ message: "Unauthorized" });
+
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) return res.status(401).send({ message: "Unauthorized" });
+        req.user = decoded;
+        next();
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ success: false, error: "Internal Server Error" });
+    }
+  };
+
   try {
     // await client.connect();
 
@@ -29,6 +58,30 @@ async function run() {
       .collection("newsletterSubscriber");
     const blogsCollection = client.db("nexTechyDB").collection("blogs");
     const wishlistCollection = client.db("nexTechyDB").collection("wishlist");
+
+    // Issue a token and send to cookie
+    app.post("/api/v1/jwt", async (req, res) => {
+      try {
+        const loggedUser = req.body;
+        console.log(loggedUser);
+        const token = jwt.sign(loggedUser, process.env.ACCESS_TOKEN_SECRET, {
+          expiresIn: "1h",
+        });
+
+        res
+          .cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+          })
+          .send({ success: true });
+      } catch (error) {
+        console.log(error);
+        res
+          .status(500)
+          .send({ success: false, error: "Internal Server Error" });
+      }
+    });
 
     //   Get blogs from database
     app.get("/api/v1/blogs", async (req, res) => {
@@ -125,6 +178,10 @@ async function run() {
       try {
         const email = req.params.email;
         const query = { email: email };
+
+        // if (email !== req.user?.email)
+        //   return res.status(403).send({ message: "Forbidden" });
+
         const result = (await wishlistCollection.findOne(query)) || {};
         res.send(result);
       } catch (error) {
