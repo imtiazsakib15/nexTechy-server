@@ -99,6 +99,22 @@ async function run() {
       }
     });
 
+    //   Get wishlist blogs from database
+    app.post("/api/v1/blogs/my-wishlist", async (req, res) => {
+      try {
+        const ids = req.body;
+        const objectIds = ids?.map((id) => new ObjectId(id));
+        const result = await blogsCollection
+          .find({ _id: { $in: objectIds } })
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        res
+          .status(500)
+          .send({ success: false, error: "Internal Server Error" });
+      }
+    });
+
     //   Post new blog in database
     app.post("/api/v1/blogs/new", async (req, res) => {
       try {
@@ -155,7 +171,7 @@ async function run() {
       }
     });
 
-    //   Put blogs in wishlist in database
+    //   Put blogs id in wishlist in database
     app.put("/api/v1/blogs/wishlist/:email", async (req, res) => {
       try {
         const email = req.params.email;
