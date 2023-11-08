@@ -12,6 +12,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
+      "http://localhost:5174",
       "https://nextechy-97707.web.app",
       "https://nextechy.vercel.app",
     ],
@@ -58,6 +59,7 @@ async function run() {
       .collection("newsletterSubscriber");
     const blogsCollection = client.db("nexTechyDB").collection("blogs");
     const wishlistCollection = client.db("nexTechyDB").collection("wishlist");
+    const commentsCollection = client.db("nexTechyDB").collection("comments");
 
     // Issue a token and send to cookie
     app.post("/api/v1/jwt", async (req, res) => {
@@ -192,7 +194,7 @@ async function run() {
       }
     });
 
-    //   Get wishlist blogs from database
+    //   Post wishlist blogs from database
     app.post("/api/v1/blogs/my-wishlist", async (req, res) => {
       try {
         const ids = req.body;
@@ -216,6 +218,19 @@ async function run() {
         res.send(result);
       } catch (error) {
         console.log(error);
+        res
+          .status(500)
+          .send({ success: false, error: "Internal Server Error" });
+      }
+    });
+
+    //   Post new comment for any blog in database
+    app.post("/api/v1/blogs/comments", async (req, res) => {
+      try {
+        const comment = req.body;
+        const result = await commentsCollection.insertOne(comment);
+        res.send(result);
+      } catch (error) {
         res
           .status(500)
           .send({ success: false, error: "Internal Server Error" });
