@@ -61,7 +61,7 @@ async function run() {
     const wishlistCollection = client.db("nexTechyDB").collection("wishlist");
     const commentsCollection = client.db("nexTechyDB").collection("comments");
 
-    // Issue a token and send to cookie
+    // Issue a token and send to cookie when login or register
     app.post("/api/v1/jwt", async (req, res) => {
       try {
         const loggedUser = req.body;
@@ -79,6 +79,23 @@ async function run() {
           .send({ success: true });
       } catch (error) {
         console.log(error);
+        res
+          .status(500)
+          .send({ success: false, error: "Internal Server Error" });
+      }
+    });
+
+    // Clear token from cookie when logout
+    app.post("/api/v1/logout", async (req, res) => {
+      try {
+        res
+          .clearCookie("token", {
+            maxAge: 0,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+          })
+          .send({ success: true });
+      } catch (error) {
         res
           .status(500)
           .send({ success: false, error: "Internal Server Error" });
@@ -179,13 +196,13 @@ async function run() {
     });
 
     //   Get user wishlist from database
-    app.get("/api/v1/blogs/wishlist/:email", async (req, res) => {
+    app.get("/api/v1/blogs/wishlist/:email", verifyToken, async (req, res) => {
       try {
         const email = req.params.email;
         const query = { email: email };
 
-        // if (email !== req.user?.email)
-        //   return res.status(403).send({ message: "Forbidden" });
+        if (email !== req.user?.email)
+          return res.status(403).send({ message: "Forbidden" });
 
         const result = (await wishlistCollection.findOne(query)) || {};
         res.send(result);
