@@ -194,6 +194,24 @@ async function run() {
       }
     });
 
+    //   Get all comments for a blog from database
+    app.get("/api/v1/blogs/:id/comments", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { blogId: { $in: [id] } };
+        const options = {
+          sort: { _id: -1 },
+        };
+        const result = await commentsCollection.find(query, options).toArray();
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+        res
+          .status(500)
+          .send({ success: false, error: "Internal Server Error" });
+      }
+    });
+
     //   Post wishlist blogs from database
     app.post("/api/v1/blogs/my-wishlist", async (req, res) => {
       try {
