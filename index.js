@@ -89,18 +89,21 @@ async function run() {
     app.get("/api/v1/blogs", async (req, res) => {
       try {
         const searchedCategory = req.query.category;
-        const searchedtitle = req.query.title;
-        console.log(searchedCategory, searchedtitle);
+        const searchedTitle = req.query.title;
 
         let query = {};
-        // if (searchedCategory == "" && searchedCategory == "") {
-        //   query = {};
-        // } else if (searchedCategory == "") {
-        //   query = { title: {$in: searchedtitle} };
-        // } else query = { category: searchedCategory };
+        if (searchedCategory == "" && searchedTitle == "") {
+          query = {};
+        } else if (searchedTitle == "") {
+          query = { category: searchedCategory };
+        } else if (searchedCategory == "") {
+          query = { title: { $regex: searchedTitle, $options: "i" } };
+        } else
+          query = {
+            category: searchedCategory,
+            title: { $regex: searchedTitle, $options: "i" },
+          };
 
-        if (searchedCategory == "") query = {};
-        else query = { category: searchedCategory };
         const result = await blogsCollection.find(query).toArray();
         res.send(result);
       } catch (error) {
